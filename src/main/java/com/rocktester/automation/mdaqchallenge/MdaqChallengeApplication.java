@@ -1,21 +1,31 @@
 package com.rocktester.automation.mdaqchallenge;
 
+import com.github.javafaker.Faker;
+import com.github.tomakehurst.wiremock.servlet.WireMockHandlerDispatchingServlet;
+import com.github.tomakehurst.wiremock.servlet.WireMockWebContextListener;
 import com.rocktester.automation.mdaqchallenge.constants.*;
 import org.apache.hc.client5.http.utils.Base64;
 import org.apache.hc.core5.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-//import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.MediaType;
+import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
+import org.springframework.web.servlet.mvc.ServletWrappingController;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 @SpringBootApplication
+@EnableAutoConfiguration(exclude = { SecurityAutoConfiguration.class })
 public class MdaqChallengeApplication {
 
     @Value("${username}")
@@ -23,6 +33,9 @@ public class MdaqChallengeApplication {
 
     @Value("${password}")
     private String password;
+
+	@Autowired
+	private Faker faker;
 
     public static void main(String[] args) {
         SpringApplication.run(MdaqChallengeApplication.class, args);
@@ -33,6 +46,53 @@ public class MdaqChallengeApplication {
         byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(StandardCharsets.US_ASCII));
         return "Basic " + new String(encodedAuth);
     }
+
+	@Bean
+	WireMockWebContextListener WireMockWebContextListener() {
+		return new WireMockWebContextListener();
+	}
+
+	@Bean
+	ServletWrappingController wireMockController() {
+		ServletWrappingController controller = new ServletWrappingController();
+		controller.setServletClass(WireMockHandlerDispatchingServlet.class);
+		controller.setBeanName("wireMockController");
+		Properties properties = new Properties();
+		properties.setProperty("RequestHandlerClass", "com.github.tomakehurst.wiremock.http.StubRequestHandler");
+		controller.setInitParameters(properties);
+		return controller;
+	}
+
+	@Bean
+	SimpleUrlHandlerMapping wireMockControllerMapping() {
+		SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
+		Properties urlProperties = new Properties();
+		urlProperties.put("/*", "wireMockController");
+		mapping.setMappings(urlProperties);
+		mapping.setOrder(Integer.MAX_VALUE - 1);
+		return mapping;
+	}
+
+	@Bean
+	ServletWrappingController wireMockAdminController() {
+		ServletWrappingController controller = new ServletWrappingController();
+		controller.setServletClass(WireMockHandlerDispatchingServlet.class);
+		controller.setBeanName("wireMockAdminController");
+		Properties properties = new Properties();
+		properties.setProperty("RequestHandlerClass", "com.github.tomakehurst.wiremock.http.AdminRequestHandler");
+		controller.setInitParameters(properties);
+		return controller;
+	}
+
+	@Bean
+	SimpleUrlHandlerMapping wireMockAdminControllerMapping() {
+		SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
+		Properties urlProperties = new Properties();
+		urlProperties.put("/__admin/*", "wireMockAdminController");
+		mapping.setMappings(urlProperties);
+		mapping.setOrder(Integer.MAX_VALUE - 2);
+		return mapping;
+	}
 
     @EventListener(ApplicationReadyEvent.class)
     void configureStubs() {
@@ -58,7 +118,8 @@ public class MdaqChallengeApplication {
         stubForSubmitTransactionWithDeleteMethod();
     }
 
-    private void stubForSubmitTransactionWithoutTransactionTime() {
+
+	private void stubForSubmitTransactionWithoutTransactionTime() {
         stubFor(post(EndpointConstants.TRANSACTION.getEndpoint())
                 .atPriority(1)
                 .withHeader(HeaderAttributeConstants.CONTENT_TYPE.getAttribute(), equalToIgnoreCase(MediaType.APPLICATION_JSON_VALUE))

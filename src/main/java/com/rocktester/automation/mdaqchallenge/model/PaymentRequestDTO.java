@@ -1,13 +1,13 @@
 package com.rocktester.automation.mdaqchallenge.model;
 
 import com.google.gson.annotations.SerializedName;
-import com.rocktester.automation.mdaqchallenge.constants.JsonPathConstants;
-import com.rocktester.automation.mdaqchallenge.constants.RegexConstants;
 import lombok.Builder;
 import lombok.Data;
+import lombok.ToString;
 
 @Data
 @Builder
+@ToString
 public class PaymentRequestDTO {
 
     @SerializedName("transaction_id")

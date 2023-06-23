@@ -1,13 +1,8 @@
 package com.rocktester.automation.mdaqchallenge;
 
-import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 
 @SpringBootTest
-class MdaqChallengeApplicationTests {
-
-    @Test
-    void contextLoads() {
-    }
-
+public class MdaqChallengeApplicationTests extends AbstractTestNGSpringContextTests {
 }

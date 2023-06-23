@@ -1,0 +1,14 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Mdaq challenge - Integration tests">
+    <!--<test name="user registration test - USA user">-->
+    <!--<classes>-->
+    <!--<class name="com.peeba.test.e2etests.authentication.TC001_SignUpTest" />-->
+    <!--</classes>-->
+    <!--</test>-->
+    <test name="Transaction API test cases">
+        <classes>
+            <class name="com.rocktester.automation.mdaqchallenge.tests.InhouseIntegrationTest" />
+            <class name="com.rocktester.automation.mdaqchallenge.tests.ThirdPartyPaymentServiceIntegrationTest" />
+        </classes>
+    </test>
+</suite>

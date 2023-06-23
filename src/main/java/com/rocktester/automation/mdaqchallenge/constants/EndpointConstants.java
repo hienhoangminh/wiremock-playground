@@ -4,7 +4,8 @@ import lombok.Getter;
 
 public enum EndpointConstants {
 
-    TRANSACTION("/transaction");
+    TRANSACTION("/transaction"),
+    PAYMENT_GATEWAY("/gateway/payment");
 
     @Getter
     private final String endpoint;
